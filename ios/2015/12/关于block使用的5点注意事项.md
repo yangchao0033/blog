@@ -1,3 +1,13 @@
+---
+layout: post
+title: "关于block使用的5点注意事项"
+date: 2016-01-04 11:24:25 +0800
+comments: true
+categories: ios
+keywords: objective-c,block,注意事项
+description: 详细讲解block的使用注意
+---
+
 <div class="post">
 		<h1 class="postTitle">
 			<a id="cb_post_title_url" class="postTitle2">关于block使用的5点注意事项【转】</a>

@@ -1,4 +1,12 @@
-# Objective-C错误模型
+---
+layout: post
+title: "Objective-C错误模型"
+date: 2016-01-04 11:04:51 +0800
+comments: true
+categories: ios
+keywords: objective-c,NSError
+description: 详细描述objective-c的错误处理泛型和异常处理
+---
 
 ## 为什么不使用异常处理机制？
 事实上，OC是具备异常处理机制的，但是具体情况下不会启用该机制。原因是ARC下默认不是“异常安全”的。
