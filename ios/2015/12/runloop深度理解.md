@@ -1,4 +1,14 @@
-#RunLoop深度理解
+---
+layout: post
+title: "RunLoop深度探究"
+date: 2016-01-06 18:15:48 +0800
+comments: true
+categories: ios
+keywords: RunLoop,Thread,RunLoopSource,
+description: 参考并自己整理关于runloop的升读探究学习
+
+---
+
 ##RunLoop的概念
 一般来讲，一个线程一次只能执行一个任务，执行完成后线程就会退出。如果我们需要一个机制，让线程能随时处理事件但并不退出，通常的代码逻辑是这样的：
 ```swift
