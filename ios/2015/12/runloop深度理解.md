@@ -126,10 +126,13 @@ CFRunLoopRunInMode(CFStringRef modeName, ...); // 返回当前线程中指定mod
 Mode暴露的管理mode item的接口有下面几个
 ```objc
 CFRunLoopAddSource(CFRunLoopRef rl, CFRunLoopSourceRef source, CFStringRef modeName);// 添加一个CFRunLoopSource对象到一个run loop mode中（如果添加的Source是source0的话，这个方法将会调用 schedule 回调在source的上下文结构（context structure）的指定方法）。一个runloop source 可以同时被注册到多个 runloop 和 runloop modes 中。当source被发出信号，无论哪一个被注册的 runloop 都会开始检测第一个发出信号的 source 。 如过rl的mode中已经包含source时，这个方法将不会做任何事。
-CFRunLoopAddObserver(CFRunLoopRef rl, CFRunLoopObserverRef observer, CFStringRef modeName); // 添加CFRunLoopObserver对象到一个run loop mode中去。 讨论：一个 runloop 观察者只能被同时注册在一个 runloop 中，尽管它可以被通过他的tunloop添加到多个runloop modes中。
-如果rl已经在 mode中 包含 obsever 中，这个方法将不会做任何事。
+CFRunLoopAddObserver(CFRunLoopRef rl, CFRunLoopObserverRef observer, CFStringRef modeName); // 添加CFRunLoopObserver对象到一个run loop mode中去。 讨论：一个 runloop 观察者只能被同时注册在一个 runloop 中，尽管它可以被通过他的tunloop添加到多个runloop modes中。 如果rl已经在 mode中 包含 obsever 中，这个方法将不会做任何事。
 CFRunLoopAddTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode);
-CFRunLoopRemoveSource(CFRunLoopRef rl, CFRunLoopSourceRef source, CFStringRef modeName); // 添加CFRunLoopTimer 对象到一个runloop mode中
-CFRunLoopRemoveObserver(CFRunLoopRef rl, CFRunLoopObserverRef observer, CFStringRef modeName);
-CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode);
+CFRunLoopRemoveSource(CFRunLoopRef rl, CFRunLoopSourceRef source, CFStringRef modeName); // 添加CFRunLoopTimer 对象到一个runloop mode中 讨论：一个runloop timer 在同一时刻只能注册在一个run loop，尽管它可以被通过他的tunloop添加到多个runloop modes中。 如果rl已经在 mode中 包含 obsever 中，这个方法将不会做任何事
+CFRunLoopRemoveObserver(CFRunLoopRef rl, CFRunLoopObserverRef observer, CFStringRef modeName); // 从run loop mode 移除 Observer 对象，如果 rl 没有包含参数中的Observer，则该函数不做任何处理
+CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode); // 从run loop mode 移除 timer 对象，如果 rl 没有包含参数中的timer，则该函数不做任何处理
 ```
+以上接口可以看出，只能通过mode name操作内部mode，当你传入一个新的mode name但runloop内部没有对应的mode时，runloop会自动帮你创建对应的CFRunloopModeRef。并且官方文档明确指出，对于runloop来说，其内部的mode只能增加不能删除。
+
+苹果官方公开的内部mode有两个：CFRunLoopDefaultMode（NSDefaultRunLoopMode）和UITrackingRunLoopMode，你可以用这两个 Mode Name来操作对应的 Mode。
+同时苹果还提出了一个操作Common标记的字符串：kCFRunLoopCommonModes（NSRunLoopCommonModes），你可以用这个字符串来操作Common Items，或标记一个Mode为“Common”。使用时注意区分该字符串与其他mode name。
