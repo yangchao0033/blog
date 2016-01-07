@@ -81,6 +81,8 @@ __目录__
 |[递归的故事（下）](http://mp.weixin.qq.com/s?__biz=MjM5NTIyNTUyMQ==&mid=425829999&idx=1&sn=f7e06bf52bddf9d8c332ea4f21d02ddb&scene=1&srcid=1202AhVbI38xlYbkxPdyGSkW&key=ac89cba618d2d976fe3d2a1f7c56b9dd321b1d05dd7c90b326d5d82ac96c8ce937363d06e9fc9f6614c8a47453c7df61&ascene=0&uin=NTk4Mzc4MzM1&devicetype=iMac+MacBookPro12%2C1+OSX+OSX+10.10.5+build(14F27)&version=11020012&pass_ticket=ui6hS0hhEVRFhYFtnu5MXzFKIeYuw9OGlpwX2mFdMPe2oBPBcFatLT8a0xFgqXUF)|算法解析|`性能优化`|
 |[轻松学习之四－－最简化原生效果集成UITableViewCell左滑多个按钮](http://www.jianshu.com/p/5bb91ccc07e3?utm_campaign=maleskine&utm_content=note&utm_medium=writer_share&utm_source=weibo&luicode=10000359)|开发技巧|`开发技巧`|
 |[10个加速Table Views开发的建议](http://ios.jobbole.com/83058/?luicode=10000359)|性能优化|`性能优化`|
+|[JSPatch实现原理详解](http://blog.cnbang.net/tech/2808/)|javascript-OC交互 [Github](https://github.com/bang590/JSPatch)|`javascript/objective-c交互`|
+
 
 ***
 
