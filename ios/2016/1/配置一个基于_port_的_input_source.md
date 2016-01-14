@@ -87,11 +87,134 @@ void myRunLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActivity 
 
 除了使用超时值，你也可以使用指定的 mode 运行 run loop。mode 和超时值不会互相排斥，并且都可以用来启动一个线程。
 
-表 3-2 展示了一个线程入口的常用的代码模板。
+表 3-2 展示了一个线程入口的常用的例行程序。示例代码的关键部分展示了一个 run loop 的基础架构。本质上，你将 input sources 和 timers 添加到你的 runloop 中，然后重复的调用其中一个例行程序来启动 run loop 。每一次例行程序返回时，你需要检查一下是否满足可能会退出线程的条件。示例使用了 Core Foundation 的框架的例行程序以便检查返回结果并且可以决定如何退出 runloop。如果你是用的是 Cocoa ，你也可以使用类似的方式通过 NSRunLoop 的方法去运行 runloop ，	并且不需要检查返回值。（使用 NSRunLoop 的方法的例子可以参考 表3-14.）
+
+表 3-2 运行 runloop
+
+```objc
+- (void)skeletionThreadMain {
+    // 如果你的应用没有使用垃圾回收 请在这里添加 自动释放池（ps：这示例代码也太老了，谁还用垃圾回收啊）
+    
+    BOOL done = NO;
+    
+    // 给 runloop 添加 source 或timer，然后做一些其他的配置
+    
+    do {
+        // 开启 runloop 并且被一个 source 被处理后要返回
+        /** SInt32 32位有符号整数 */
+        SInt32 result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 10, YES);
+        
+        // 如果 source 已经显式的停止了 runloop ，或者根本不存在任何 source 或 timer，将会退出。
+        if ((result == kCFRunLoopRunStopped) || (result == kCFRunLoopRunFinished)) {
+            done = YES;
+            // 在这里检查任何其他符合退出的条件并且按需设置 done 变量的值。
+        }
+    } while (!done);
+    
+    // 在这里清除代码。确保释放任何之前创建的自动释放池。
+}
+```
+可以递归开启 runloop，换句话说，你可以使用 input source 或者 timer 的例行程序来调用 [CFRunLoopRun](https://developer.apple.com/library/ios/documentation/CoreFoundation/Reference/CFRunLoopRef/index.html#//apple_ref/c/func/CFRunLoopRun),[CFRunLoopRunInMode](https://developer.apple.com/library/ios/documentation/CoreFoundation/Reference/CFRunLoopRef/index.html#//apple_ref/c/func/CFRunLoopRunInMode)或者任何 NSRunLoop 的 runloop 启动方法。这样做你可以使用任何你想用的 mode 来运行一个 嵌套的 run loop ，包括 通过外层 run loop 使用的 mode 。
+
+### 退出 RunLoop
+有两种途径可以让 runloop 在处理事件之前退出：
+
+* 使用超时值配置 runloop 运行。
+* 直接告诉 runloop 停止（ps：。。。这条太搞了）。
+
+使用超时值无疑是更偏爱的方法，如果你能管理它，指定一个超时值使 runloop 结束所有他的正常处理的任务， 包括在退出前向 runloop observer 发送通知。
+
+使用 [CFRunLoopStop](https://developer.apple.com/library/ios/documentation/CoreFoundation/Reference/CFRunLoopRef/index.html#//apple_ref/c/func/CFRunLoopStop) 函数显示地停止 runloop，产生的结果和超时相似。runloop 会发送任何 runloop 提醒通知然后才退出。不同的是你可以将这项技术应用在你用无条件方式开启的 runloop 上。
+
+尽管移除一个 runloop 的 input source 和 timer 可以造成 runloop 的退出，但这并不是一个可靠的方式来停止 runloop 。一些系统例行程序给 runloop 添加一些 input source 来处理必要的事件。你的代码可能无法看出这些 input source，你可能不能移除这些用来防止 runloop  退出的 source。
+
+### 线程安全 和 Run Loop 对象
+线程安全大多取决于你用来操作 runloop 的API。Core Foundation 函数 一般来说都是线程安全的，所以可以被任何线程调用。假如你正在执行一个修改 runloop 配置的操作，那么继续吧，对拥有 runloop 的线程来说这样做仍然是很好的作法。
+
+Cocoa 的 `NSRunLoop` 类内部不像 Core Foundation 中的接口那样是线程安全的。如果你要使用 NSRunLoop 类去修改你的 runloop，你只能在 runloop 所在的线程中这样做。先其他线程中的 runloop 中添加 input source 或 timer 会引起你的程序崩溃或出现不可预知的异常。
+
+
+### 配置 run loop source
+
+接下来的章节将展示如何在 Cocoa 和 Core Foundation 中设置不同类型的 input source。
+
+#### 定义一个自定义自定义 input source
+
+创建一个自定义的 input source 你需要实现以下这些条件：
+
+* 你想要你的 source 处理的信息
+* 一段调度模块的例行程序让感兴趣的客户端了解如何连接你的 input source。
+* 一段处理模块例行程序用来处理任何客户端发送的请求
+* 一段取消模块的例行程序用来销毁你的 source
+
+因为你创建了一个自定义的 input source 来处理自定义的信息，所以实际上的配置会设计的非常灵活。调度模块，处理模块和取消模块的例行程序几乎都是你的自定义 input source 的关键例行程序。剩下的大多数 input source 行为都发生在这些例行处理程序之外。比如，由你来定义一个工具用来将数据传到你的 input source并且传递你的 input source 的数据到其他线程中去。
+
+插图 3-2 展示了一个简单的自定义 input source 的配置。在本例中，应用程序主线程维持引用了input source ， input source 的缓冲模块，还有安装 input source 的 runloop。当主线程有一个任务向切换到工作子线程中去，他会发送一个命令，命令缓冲区以及启动任务所需的任何线程的信息（因为主线程和工作子线程的 input source 都有权限去访问命令缓冲区，访问必须同步）一旦命令发送了，主线程会发送信号给 input source 来唤醒工作子线程的 runloop。一旦受到唤醒的命令， runloop 会调用 input source 的处理程序 去处理命令缓存器中缓存的命令。
+
+图 3-2 操作一个自定义 input source
+
+![图 3-2](https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/Multithreading/Art/custominputsource.jpg)
+
+接下来的章节将会解释如何通过上图实现一个自定义 input source 并展示你需要实现的关键代码。
+
+### 定义 input source
+定义一个自定义 input source 需要使用 Core Foundation 的例行程序配置你的 runloop input source 并且 将它与你的 runloop 关联。尽管基础处理程序是基于 C-语言 函数的，但这不会阻止你使用 Objective-C 或者 C++ 去封装它为面向对象的代码。
+
+插图3-2中介绍的 input source 使用一个 objective-C 对象去管理一个命令缓存器，并与 runloop 进行协调。列表3-3 展示了这个对象的定义。`RunLoopSource` 对象管理一个命令缓冲器，并且使用命令缓存器接受来自其他线程的消息。该表也展示了 `RunLoopContext` 对象的定义，该对象仅仅是一个容器，用来传递一个 `RunLoopSource` 对象和应用主线程的 runloop 引用。
+
+表 3-3 自定义 input source 对象的定义
+```objc
+@interface YCRunLoopSource : NSObject
+{
+    CFRunLoopSourceRef runLoopSource;
+    NSMutableArray *commands;
+}
+
+- (id)init;
+// 添加
+- (void)addToCurrentRunLoop;
+// 销毁
+- (void)invalidate;
+
+// 处理方法
+- (void)sourceFired;
+
+// 用来注册需要处理的命令的客户接口
+- (void)addCommand:(NSInteger)command withData:(id)data;
+- (void)fireAllCommandsOnRunLoop:(CFRunLoopSourceRef)runloop;
+
+// 这些是CFRunLoopRef 的回调函数
+/** 调度函数 */
+void RunLoopSourceScheduleRoutine(void *info, CFRunLoopRef r1, CFStringRef mode);
+/** 处理函数 */
+void RunLoopSourcePerformRoutine (void *info);
+/** 取消函数 */
+void RunLoopSourceCancelRoutine (void *info, CFRunLoopRef rl, CFStringRef mode);
+
+@end
+
+// RunLoopContext 是一个 在注册 input source 时使用的容器对象
+
+@interface YCRunLoopContext : NSObject
+{
+    CFRunLoopRef runLoop;
+    YCRunLoopSource *source;
+}
+/** 持有 runloop 和 source */
+@property (readonly) CFRunLoopRef runLoop;
+@property (readonly) YCRunLoopSource *source;
+
+- (id)initWithSource:(YCRunLoopSource*)src andLoop:(CFRunLoopRef)loop;
+
+@end
+```
+
+尽管 Objective-C 代码管理着 input source 的自定义数据。关联一个 input source 到
 
 
 
 ### 配置一个基于 port 的 input source
+
 Cocoa 和 Core Foundation 都支持用于和线程间或者进程间通信的基于 端口的对象。接下来的章节将会向你展示如何使用一些不同类型的 port 构建 port 通信。
 
 ### 配置一个NSMachPort Object
