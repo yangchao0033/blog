@@ -2,7 +2,8 @@
 一个 run loop 对象提供了一些主要接口用于向你的 run loop 中添加 input source ，timers， 和run loop observer，并且运行它。每一条线程有且只有一个run loop 与他相关联。在 Cocoa 中，这个对象是 [NSRunLoop](https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Classes/NSRunLoop_Class/index.html#//apple_ref/occ/cl/NSRunLoop) 类的一个实例。在底层的应用中，它是指向 [CFRunLoopRef](https://developer.apple.com/library/ios/documentation/CoreFoundation/Reference/CFRunLoopRef/index.html#//apple_ref/c/tdef/CFRunLoopRef) 这种不透明类型的一个指针。
 
 ## 获取 Run Loop 对象
-你需要使用以下其中之一来获取当前线程的 Run Loop 。
+你需要使用以下其中之一来获取当前线程的 Run Loop ：
+<!--more-->
 
 * 在 Cocoa 中，使用 [NSRunLoop](https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Classes/NSRunLoop_Class/index.html#//apple_ref/occ/cl/NSRunLoop) 的类方法 [currentRunLoop](https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Classes/NSRunLoop_Class/index.html#//apple_ref/occ/clm/NSRunLoop/currentRunLoop) 去拿到一个 `NSRunLoop` 对象。
 * 使用 [CFRunLoopGetCurrent](https://developer.apple.com/library/ios/documentation/CoreFoundation/Reference/CFRunLoopRef/index.html#//apple_ref/c/func/CFRunLoopGetCurrent) 函数。
@@ -143,8 +144,8 @@ Cocoa 的 `NSRunLoop` 类内部不像 Core Foundation 中的接口那样是线�
 创建一个自定义的 input source 你需要实现以下这些条件：
 
 * 你想要你的 source 处理的信息
-* 一段调度模块的例行程序让感兴趣的客户端了解如何连接你的 input source。
-* 一段处理模块例行程序用来处理任何客户端发送的请求
+* 一段调度模块的例行程序让感兴趣的客户机了解如何连接你的 input source。
+* 一段处理模块例行程序用来处理任何客户机发送的请求
 * 一段取消模块的例行程序用来销毁你的 source
 
 因为你创建了一个自定义的 input source 来处理自定义的信息，所以实际上的配置会设计的非常灵活。调度模块，处理模块和取消模块的例行程序几乎都是你的自定义 input source 的关键例行程序。剩下的大多数 input source 行为都发生在这些例行处理程序之外。比如，由你来定义一个工具用来将数据传到你的 input source并且传递你的 input source 的数据到其他线程中去。
@@ -179,7 +180,7 @@ Cocoa 的 `NSRunLoop` 类内部不像 Core Foundation 中的接口那样是线�
 // 处理方法
 - (void)sourceFired;
 
-// 用来注册需要处理的命令的客户接口
+// 用来注册需要处理的命令的客户机接口
 - (void)addCommand:(NSInteger)command withData:(id)data;
 - (void)fireAllCommandsOnRunLoop:(CFRunLoopSourceRef)runloop;
 
@@ -209,9 +210,137 @@ void RunLoopSourceCancelRoutine (void *info, CFRunLoopRef rl, CFStringRef mode);
 @end
 ```
 
-尽管 Objective-C 代码管理着 input source 的自定义数据。关联一个 input source 到
+尽管 Objective-C 代码管理着 input source 的自定义数据。关联一个 input source 到一个具备 基于 C-语言 的回调函数的 runloop 。其中第一个函数是当你实际将 input source 添加到 runloop 中的时刻调用。流程将展示在 表 3-4 中。因为这个 input source 仅只有一个 客户机（主线程）。它使用调度者函数通过目标线程 application 的代理发送消息在目标线程注册自己。当 application 的代理和 input source 进行通信时 ,会使用 RunLoopContext 对象中的 `info` 信息来完成这个事。
 
+表 3-4 调度 run loop source
 
+```objc
+void RunLoopSourceScheduleRoutine(void *info, CFRunLoopRef r1, CFStringRef mode){
+    YCRunLoopSource *obj = (__bridge YCRunLoopSource *)info;
+    // 这里的 Appdelegate 是主线程的代理 	
+    AppDelegate *del = [AppDelegate sharedAppDelegate];
+    
+    // 上下文对象中持有source自己
+    YCRunLoopContext *theContext = [[YCRunLoopContext alloc] initWithSource:obj andLoop:r1];
+    // 通过代理去注册 Source 自己 
+    [del performSelectorOnMainThread:@selector(registerSource:) withObject:theContext waitUntilDone:NO];
+    
+}
+```
+其中最重要的回调例行程序是当你的 input source 被信号激活时处理自定义数据的部分。表3-5中展示了与 `RunLoopSource` 对象关联的执行者回调例行程$序,这个函数仅仅转发用来 `sourceFired` 方法工作的请求，该请求用来处理任何 `command buffer` （命令缓冲区）中存在的命令。
+
+表3-5 input source 中的执行者
+```objc
+void RunLoopSourcePerformRoutine (void *info)
+{
+    RunLoopSource*  obj = (RunLoopSource*)info;
+    [obj sourceFired];
+}
+```
+如果你使用 `CFRunLoopSourceInvalidate` 函数将 input source 从 runloop 重移除。系统会调用你的 input source 中的取消者例行程序。你可以利用这个例行程序去通知客户机你的 input source 不再可用并且他们应该移除任何自己的相关的引用。表3-6 展示了取消者例行回调程序通过 RunLoopSource 对象进行注册。这个函数发送另一个 RunLoopContext 对象给 application 代理。但是这让代理去移除 runloop surce 的相关引用。
+
+表3-6 销毁一个 input source
+
+```objc
+void RunLoopSourceCancelRoutine (void *info, CFRunLoopRef rl, CFStringRef mode)
+{
+    RunLoopSource* obj = (RunLoopSource*)info;
+    AppDelegate* del = [AppDelegate sharedAppDelegate];
+    RunLoopContext* theContext = [[RunLoopContext alloc] initWithSource:obj andLoop:rl];
+ 
+    [del performSelectorOnMainThread:@selector(removeSource:)
+                                withObject:theContext waitUntilDone:YES];
+}
+```
+
+`
+笔记：应用代理方法  registerSource: 和 removeSource 方法在下面的章节 《协调 input source 的客户机》展示
+`
+
+###为 runloop 安装 input source
+表3-7 展示了 `RunLoopSource` 类的 `init` 方法 和 `addToCurrentRunLoop` 方法。`init` 方法创建了 [CFRunLoopSource](https://developer.apple.com/library/ios/documentation/CoreFoundation/Reference/CFRunLoopSourceRef/index.html#//apple_ref/c/tdef/CFRunLoopSourceRef) 不透明类型的必须关联到 runloop 的对象。它会传递 `RunLoopSource` 对象自己作为 山下文信息 以便于例行回调程序有一个指向对象的指针。input source 直到线程唤起 `addToCurrentRunLoop` 方法时才会执行安装，准确将在 RunLoopSourceScheduleRoutine 回调函数调用时。 一旦 input source 安装到 runloop 中，线程将会运行自己的 runloop 去等待 input source 发出事件。
+
+表3-7 安装 run loop source
+
+```objc
+- (id)init {
+    // 创建上下文容器，其中会连接自己的 info，retain info release info，还会关联三个例行程序。
+    CFRunLoopSourceContext context = {0, (__bridge void *)(self), NULL, NULL, NULL ,NULL, NULL, &RunLoopSourceScheduleRoutine, RunLoopSourceCancelRoutine, RunLoopSourcePerformRoutine};
+    /** 通过索引，上下文，和CFAllocator创建source */
+    runLoopSource = CFRunLoopSourceCreate(NULL, 0, &context);
+    commands = [[NSMutableArray alloc] init];
+    return  self;
+}
+
+- (void)addToCurrentRunLoop{
+    CFRunLoopRef runLoop = CFRunLoopGetCurrent();
+    CFRunLoopAddSource(runLoop, runLoopSource, kCFRunLoopDefaultMode);
+}
+```
+
+###协调 input source 的客户机
+
+对于你的 input source 会非常有用，你需要操作它并且从其他线程向它提供消息。input source 的要点是将其添加到线程并睡眠直到有事情要做时才唤醒。事实上很有必要让其他线程了解 input surce 并且有方法可以和它交流（沟通数据）。
+
+通知你的 input source 客户机的方法之一是发出注册请求 当你的 input source 第一次安装到你的 runloop 中时。你可以向你的 input source 注册尽可能多的客户机。或者你仅仅只是简单的用一些中央机构，然后将你的 input source 声明为感兴趣的客户端进行注册。表3-8 展示了  通过代理 和 调用唤起定义的 注册方法 当 RunLoopSource 对象的调度者函数被调用时。这个方法将会收到 RunLoopSource 提供的 RunLoopContext 对象并且将它添加到他的 source 列表中。这个表也会展示 当 input source 从 他的 runloop 中被移除时 用来注销的例行程序。
+表 3-8 使用 application 的 代理 注销并且移除 input source
+ 
+```objc
+ #import "YCRunLoopSource.h"
+ #import "YCRunLoopContext.h"
+@interface AppDelegate : NSObject
+@property (nonatomic, strong) NSMutableArray *sourcesToPing;
+
+/** 应该是一个单例 */
++ (instancetype)sharedAppDelegate;
+- (void)registerSource:(YCRunLoopContext *)context;
+- (void)removeSource:(YCRunLoopContext *)context;
+
+@end
+
+static AppDelegate *_instance;
+@implementation AppDelegate
+
++ (instancetype)sharedAppDelegate
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _instance = [[self alloc] init];
+    });
+    return _instance;
+}
+
+- (void)registerSource:(YCRunLoopContext *)context
+{
+    [self.sourcesToPing addObject:context];
+}
+
+- (void)removeSource:(YCRunLoopContext *)context
+{
+    id objToRemove = nil;
+    
+    for (YCRunLoopContext *contextObj in self.sourcesToPing) {
+        if ([contextObj isEqual:context]) {
+            objToRemove = contextObj;
+            break;
+        }
+    }
+    
+    if (objToRemove) {
+        [self.sourcesToPing removeObject:objToRemove];
+    }
+}
+
+- (NSMutableArray *)sourcesToPing {
+    if (_sourcesToPing == nil) {
+        _sourcesToPing = @[].mutableCopy;
+    }
+    return _sourcesToPing;
+}
+@end
+```
+
+**未完待续..**
 
 ### 配置一个基于 port 的 input source
 
@@ -279,6 +408,6 @@ Cocoa 和 Core Foundation 都支持用于和线程间或者进程间通信的基
 
 表 3-14 <span id = "liting3-14"> 使用 Mach port 启动子线程 </span>
 
-```objc
+**未完待续。。**
 
-```
+
