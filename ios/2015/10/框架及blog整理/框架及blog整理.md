@@ -20,7 +20,7 @@ __目录__
 
 
 ## 	控件及框架
-> `开发框架` `提醒弹出框` `下拉列表` `按钮` `标签` `指示器` `调试工具` `导航` `下拉刷新` `电话号校验工具` `webviwe` `图文混排` `自动布局` `服务器回传异常` `版本更新检测`
+> `开发框架` `提醒弹出框` `下拉列表` `按钮` `标签` `指示器` `调试工具` `导航` `下拉刷新` `电话号校验工具` `webviwe` `图文混排` `自动布局` `服务器回传异常` `版本更新检测` `RAC`
 
 | 项目名       	 	| 项目描述     	| 	备注	| 配图 |
 | ------------- 	|:-------------:| :-----:|:-----:|
@@ -46,6 +46,9 @@ __目录__
 |[facebook/AsyncDisplayKit](https://github.com/facebook/AsyncDisplayKit)|异步显示工具|`性能优化`|
 |[facebook/WebDriverAgent](https://github.com/facebook/WebDriverAgent)|iOS用于web测试的框架|`调试工具`|
 |[KVOController](https://github.com/facebook/KVOController)|安全KVO框架[(详情)](https://github.com/facebook/KVOController)|`性能优化`|
+|[AFNetworking的RAC扩展](https://github.com/CodaFi/AFNetworking-RACExtensions)|如题|`RAC`|
+|[基于AFN+RAC+Mantle的网络请求框架](https://github.com/octokit/octokit.objc)|如题|`RAC`|
+|[雷纯峰的MVVM+RAC项目](https://github.com/leichunfeng/MVVMReactiveCocoa)|如题|`RAC`|
 
 ***
 
