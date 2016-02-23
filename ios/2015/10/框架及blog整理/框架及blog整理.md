@@ -89,6 +89,10 @@ __目录__
 |[Autolayout 的第一次亲密接触](http://ios.jobbole.com/83371/)|Autolayout 原理及使用详解，偏原理|`自动布局`|
 |[里脊串的 Autolayout](http://adad184.com/2014/09/28/use-masonry-to-quick-solve-autolayout/)|比较基础的使用方法|`自动布局`|
 |[有趣的Autolayout示例-Masonry实现](http://tutuge.me/2015/05/23/autolayout-example-with-masonry/)|一些自动布局写的有趣的例子|`自动布局`|
+|[RACSignal的基本用法](http://www.raywenderlich.com/62699/reactivecocoa-tutorial-pt1)|老外写的|`RAC`|
+|[RACSignal的Subscription深入分析](http://tech.meituan.com/RACSignalSubscription.html)|美团的技术wiki|`RAC`|
+|[iOS 开发之 ReactiveCocoa 下的 MVVM（干货分享）](http://www.cnblogs.com/ludashi/p/4925042.html)|入门级RAC+MVVM|`RAC` `MVVM`|
+
 ***
 
 ## 设计
