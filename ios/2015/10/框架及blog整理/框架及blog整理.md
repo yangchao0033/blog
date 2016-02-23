@@ -14,6 +14,7 @@ __目录__
 | ------------- 	|:-------------:| :-----:|:-----:|
 | [精仿知乎日报iOS端](https://github.com/zpz1237/NirZhihuDaily2.0) 	| 如题 | swift |<img src="http://7xju1s.com1.z0.glb.clouddn.com/image/4/dd/c0dca6c31fd90e93aef3f343a8cac.gif" width = "90" height = "160" alt="图片名称" align=center />| 
 | [MVVM项目示例](https://github.com/lizelu/MVVM) 	| 附blog讲解 | OC |<img src="http://images.cnitblog.com/blog/545446/201501/081739565313089.png" width = "90" height = "160" alt="图片名称" align=center />|
+|[雷纯峰的MVVM+RAC项目](https://github.com/leichunfeng/MVVMReactiveCocoa)|如题|`RAC`|
 
 
 ***
@@ -84,8 +85,10 @@ __目录__
 |[轻松学习之四－－最简化原生效果集成UITableViewCell左滑多个按钮](http://www.jianshu.com/p/5bb91ccc07e3?utm_campaign=maleskine&utm_content=note&utm_medium=writer_share&utm_source=weibo&luicode=10000359)|开发技巧|`开发技巧`|
 |[10个加速Table Views开发的建议](http://ios.jobbole.com/83058/?luicode=10000359)|性能优化|`性能优化`|
 |[JSPatch实现原理详解](http://blog.cnbang.net/tech/2808/)|javascript-OC交互 [Github](https://github.com/bang590/JSPatch)|`javascript/objective-c交互`|
-|[一个国外的好用的框架集]()|[链接1](https://www.cocoacontrols.com/controls?language=3-javascript-react-native&platform_id=ios),[链接2](https://github.com/jobbole/awesome-ios-cn/blob/master/README.md#getting-started)|`三方库`|
-
+|一个国外的好用的框架集|[链接1](https://www.cocoacontrols.com/controls?language=3-javascript-react-native&platform_id=ios),[链接2](https://github.com/jobbole/awesome-ios-cn/blob/master/README.md#getting-started)|`三方库`|
+|[Autolayout 的第一次亲密接触](http://ios.jobbole.com/83371/)|Autolayout 原理及使用详解，偏原理|`自动布局`|
+|[里脊串的 Autolayout](http://adad184.com/2014/09/28/use-masonry-to-quick-solve-autolayout/)|比较基础的使用方法|`自动布局`|
+|[有趣的Autolayout示例-Masonry实现](http://tutuge.me/2015/05/23/autolayout-example-with-masonry/)|一些自动布局写的有趣的例子|`自动布局`|
 ***
 
 ## 设计
