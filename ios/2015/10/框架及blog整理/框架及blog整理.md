@@ -92,6 +92,7 @@ __目录__
 |[RACSignal的基本用法](http://www.raywenderlich.com/62699/reactivecocoa-tutorial-pt1)|老外写的|`RAC`|
 |[RACSignal的Subscription深入分析](http://tech.meituan.com/RACSignalSubscription.html)|美团的技术wiki|`RAC`|
 |[iOS 开发之 ReactiveCocoa 下的 MVVM（干货分享）](http://www.cnblogs.com/ludashi/p/4925042.html)|入门级RAC+MVVM|`RAC` `MVVM`|
+|[iOS获取设备唯一标识符](http://www.cnblogs.com/smileEvday/p/UDID.html)|亲测可用|`设备唯一标志位`|
 
 ***
 
